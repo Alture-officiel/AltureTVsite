@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>AltureTV</title>
+  <style>
+    body { font-family:sans-serif; background:#191a23; color:#f7f7f9; margin:0; transition:.2s;}
+    body.light {background:#f7f7f9;color:#23243a;}
+    header { background:#23243a; padding:14px 20px; display:flex; justify-content:space-between; align-items:center;}
+    body.light header {background:#eaeaea;}
+    .logo { font-weight:700; font-size:2em; color:#5fd068;}
+    nav button { background:#191a23; color:#fff; border:none; margin:0 3px; padding:9px 18px; border-radius:22px; cursor:pointer;}
+    nav button.active, nav button:hover { background:#5fd068; color:#191a23;}
+    body.light nav button { background:#fff; color:#23243a;}
+    main { padding:18px 3vw 28px 3vw; max-width:850px; margin:auto;}
+    .tv-section { display:none; }
+    .tv-section.active { display:block; }
+    h2 { color:#5fd068; }
+    .grid-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:20px;}
+    .card { background:#222335; border-radius:13px; padding:13px 11px 11px 11px; min-height:90px;}
+    body.light .card {background:#eaeaea;}
+    .title { font-size:1.1em; font-weight:500; color:#fff;}
+    body.light .title {color:#23243a;}
+    .desc { font-size:.97em; margin-bottom:13px; color:#c4c3cc;}
+    body.light .desc {color:#555;}
+    .badge {background:#5fd068;color:#191a23;border-radius:7px;font-size:.8em;padding:2px 8px;margin-right:7px;}
+    .card-actions { display:flex; gap:10px; }
+    .action-btn { background:#292a3d; border:none; color:#fff; padding:6px 11px; border-radius:7px; cursor:pointer;}
+    .action-btn.fav.active { color: gold;}
+    .action-btn.fav {color:#5fd068;}
+    .action-btn.fav.active {color:gold;}
+    .action-btn:hover { background:#5fd068; color:#191a23;}
+    .empty-msg { color:#aaa; text-align:center; margin-top:22px;}
+    .player-modal { position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(25,26,35,0.92);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:100;}
+    .player-modal.active { display:flex;}
+    .player-modal video { max-width:96vw; max-height:60vh; background:#000;}
+    .player-modal .close {position:absolute;top:24px;right:30px;font-size:2em;color:#fff;cursor:pointer;}
+    #video-title {margin-top:14px;font-size:1.1em;color:#5fd068;}
+    /* Profil */
+    .profile-container {display:flex;flex-direction:column;align-items:center;margin-top:20px;}
+    .profile-avatar {width:90px;height:90px;border-radius:50%;background:#5fd068;color:#23243a;display:flex;align-items:center;justify-content:center;font-size:2.5em;margin-bottom:14px;}
+    .profile-username {font-weight:bold;font-size:1.2em;}
+    .profile-email {font-size:.95em;color:#aaa;margin-bottom:18px;}
+    .profile-btn {background:#5fd068;color:#23243a;border:none;padding:10px 22px;border-radius:10px;font-size:1em;cursor:pointer;margin-top:9px;}
+    .profile-btn:hover {background:#2ecf5c;}
+    /* Paramètres */
+    .settings-container {max-width:370px;margin:30px auto;background:#222335;padding:22px 20px;border-radius:13px;}
+    body.light .settings-container {background:#eaeaea;}
+    .settings-row {display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;}
+    .settings-label {font-weight:bold;}
+    .settings-switch {width:40px;height:22px;background:#cfcfcf;border-radius:16px;position:relative;cursor:pointer;}
+    .settings-switch-inner {position:absolute;width:20px;height:20px;top:1px;left:1px;background:#fff;border-radius:50%;transition:left .2s;}
+    .settings-switch.active {background:#5fd068;}
+    .settings-switch.active .settings-switch-inner {left:19px;}
+    .settings-btn {background:#5fd068;color:#23243a;border:none;padding:7px 16px;border-radius:8px;font-size:1em;margin-top:13px;font-weight:bold;cursor:pointer;}
+    .settings-btn:hover {background:#2ecf5c;}
+    /* Recherche */
+    #search-form {display:flex;align-items:center;margin-bottom:12px;}
+    #search-query {padding:8px;border-radius:7px;border:1px solid #393a4d;margin-right:8px;width:240px;font-size:1em;background:#23243a;color:#fff;}
+    body.light #search-query {background:#fff;color:#23243a;border:1px solid #cfcfcf;}
+    #search-form button[type="submit"] {background:#5fd068;color:#23243a;border:none;padding:8px 18px;border-radius:7px;cursor:pointer;font-weight:bold;}
+    @media (max-width: 600px) {
+      main {padding:10px 1vw 16px 1vw;max-width:100vw;}
+      .card {padding:8px 3px 7px 3px;}
+      .profile-container {margin-top:6px;}
+      .settings-container {padding:10px 3px;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">AltureTV</div>
+    <nav>
+      <button data-section="live" class="active">Direct</button>
+      <button data-section="vod">VOD</button>
+      <button data-section="replay">Replay</button>
+      <button data-section="favorites">Favoris</button>
+      <button data-section="search">Recherche</button>
+      <button data-section="profile">Profil</button>
+      <button data-section="settings">Paramètres</button>
+    </nav>
+  </header>
+  <main>
+    <!-- Direct -->
+    <section id="live" class="tv-section active">
+      <h2>En direct</h2>
+      <div class="grid-list" id="channels-list"></div>
+      <div style="text-align:center;margin-top:14px;">
+        <button class="settings-btn" id="prevPage">⏮️</button>
+        <span id="pageInfo">Page 1 / 50</span>
+        <button class="settings-btn" id="nextPage">⏭️</button>
+      </div>
+    </section>
+    <!-- VOD -->
+    <section id="vod" class="tv-section">
+      <h2>VOD</h2>
+      <div class="grid-list" id="vod-list"></div>
+      <div class="empty-msg" id="vod-empty" style="display:none">Aucune VOD disponible.</div>
+    </section>
+    <!-- Replay -->
+    <section id="replay" class="tv-section">
+      <h2>Replay</h2>
+      <div class="grid-list" id="replay-list"></div>
+      <div class="empty-msg" id="replay-empty" style="display:none">Aucun replay disponible.</div>
+    </section>
+    <!-- Favoris -->
+    <section id="favorites" class="tv-section">
+      <h2>Mes Favoris</h2>
+      <div class="grid-list" id="favorites-list"></div>
+      <div class="empty-msg" id="fav-empty" style="display:none">Aucun favori.</div>
+    </section>
+    <!-- Recherche -->
+    <section id="search" class="tv-section">
+      <h2>Recherche</h2>
+      <form id="search-form">
+        <input type="text" id="search-query" placeholder="Titre, catégorie, description..." autocomplete="off" />
+        <button type="submit">Rechercher</button>
+      </form>
+      <div class="grid-list" id="search-results"></div>
+      <div class="empty-msg" id="search-empty" style="display:none">Aucun résultat.</div>
+    </section>
+    <!-- Profil -->
+    <section id="profile" class="tv-section">
+      <h2>Mon Profil</h2>
+      <div class="profile-container">
+        <div class="profile-avatar" id="profile-avatar">👤</div>
+        <div class="profile-username" id="profile-username">MxsbDream</div>
+        <div class="profile-email" id="profile-email">mxsb@example.com</div>
+        <button class="profile-btn" onclick="alert('Déconnexion simulée !')">Déconnexion</button>
+      </div>
+    </section>
+    <!-- Paramètres -->
+    <section id="settings" class="tv-section">
+      <h2>Paramètres</h2>
+      <div class="settings-container">
+        <div class="settings-row">
+          <span class="settings-label">Thème clair / sombre</span>
+          <div class="settings-switch" id="theme-switch">
+            <div class="settings-switch-inner"></div>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Réinitialiser Favoris</span>
+          <button class="settings-btn" id="resetFavBtn">Réinitialiser</button>
+        </div>
+        <div style="margin-top:18px;font-size:.93em;color:#aaa;">Paramètres sauvegardés dans ce navigateur.</div>
+      </div>
+    </section>
+    <!-- Player -->
+    <div id="player-modal" class="player-modal">
+      <span class="close" id="close-player">&times;</span>
+      <video id="video-player" controls autoplay></video>
+      <div id="video-title"></div>
+    </div>
+  </main>
+  <script>
+    // --- Données simulées ---
+    function generateChannels() {
+      const demoStreams = [
+        "https://www.w3schools.com/html/mov_bbb.mp4",
+        "https://www.w3schools.com/html/movie.mp4"
+      ];
+      let arr = [];
+      for(let i=1;i<=1000;i++) {
+        // Chaîne 124 = France 24 externe
+        if(i === 124) {
+          arr.push({
+            id: 124,
+            name: "France 24",
+            stream: "", // pas de lecteur intégré !
+            externalLink: "https://www.france24.com/fr/direct",
+            categories: ["Infos"],
+            logo: "🌍",
+            desc: "France 24 en direct (site officiel)"
+          });
+        } else {
+          arr.push({
+            id: i,
+            name: "Chaîne " + i.toString().padStart(3,'0'),
+            stream: demoStreams[i%2],
+            categories: [i%4===0?"Divertissement":i%4===1?"Infos":i%4===2?"Cinéma":"Sport"],
+            logo: "🖥️",
+            desc: "Chaîne n°"+i
+          });
+        }
+      }
+      return arr;
+    }
+    const channels = generateChannels();
+    const vodList = [
+      { id: 11, title: "L'Odyssée du Temps", video: "https://www.w3schools.com/html/movie.mp4", categories: ["Aventure", "Docu"], description: "Voyagez à travers l'histoire de la Terre." },
+      { id: 12, title: "Comédie Parisienne", video: "https://www.w3schools.com/html/mov_bbb.mp4", categories: ["Comédie"], description: "Une comédie drôle et tendre, 100% française." },
+      { id: 13, title: "Thriller Urbain", video: "https://www.w3schools.com/html/movie.mp4", categories: ["Thriller"], description: "Suspense haletant dans les rues de la ville." }
+    ];
+    const replayList = [
+      { id: 21, title: "Journal Télévisé 20H", video: "https://www.w3schools.com/html/movie.mp4", categories: ["Infos"], description: "L'actualité du jour en replay." },
+      { id: 22, title: "Match - Paris vs Lyon", video: "https://www.w3schools.com/html/mov_bbb.mp4", categories: ["Sport"], description: "Le grand match de Ligue 1, revivez les meilleurs moments !" },
+      { id: 23, title: "Docu Nature", video: "https://www.w3schools.com/html/movie.mp4", categories: ["Docu"], description: "La faune sauvage comme si vous y étiez." }
+    ];
+    let favorites = JSON.parse(localStorage.getItem('alturetv_favorites')||'[]');
+    let theme = localStorage.getItem('alturetv_theme')||'dark';
+    if(theme==='light') document.body.classList.add('light');
+    // --- Navigation ---
+    document.querySelectorAll('nav button').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        let sec = btn.getAttribute('data-section');
+        if(sec === 'live') livePage = 1;
+        document.querySelectorAll('.tv-section').forEach(s=>s.classList.remove('active'));
+        document.getElementById(sec).classList.add('active');
+        document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        if(sec==='favorites') renderFavorites();
+        if(sec==='vod') renderVod();
+        if(sec==='replay') renderReplay();
+        if(sec==='live') renderLive();
+        if(sec==='search') { renderSearchResults([]); document.getElementById('search-query').value=''; }
+      });
+    });
+    // --- Direct (pagination) ---
+    let livePerPage = 20, livePage = 1;
+    function renderLive() {
+      let div = document.getElementById('channels-list');
+      div.innerHTML = '';
+      let totalPages = Math.ceil(channels.length/livePerPage);
+      if(livePage<1) livePage=1;
+      if(livePage>totalPages) livePage=totalPages;
+      let start = (livePage-1)*livePerPage, end = Math.min(start+livePerPage,channels.length);
+      channels.slice(start,end).forEach(c=>{
+        let card = document.createElement('div');
+        card.className = "card";
+        card.innerHTML = `
+          <div class="title"><span class="badge">${c.categories[0]}</span> ${c.logo} ${c.name} <span style="color:#5fd068;font-size:.88em;">#${c.id}</span></div>
+          <div class="desc">${c.desc}</div>
+          <div class="card-actions">
+            <button class="action-btn play-btn"></button>
+            <button class="action-btn fav fav-btn${isFavorite('channel',c.id)?' active':''}">${isFavorite('channel',c.id)?'★':'☆'}</button>
+          </div>`;
+        const playBtn = card.querySelector('.play-btn');
+        if(c.externalLink){
+          playBtn.textContent = "Regarder la chaîne ";
+          playBtn.addEventListener('click',()=>{
+            if(confirm("⚠️ Vous allez aller sur un service non sertifié par Alture. Souhaitez-vous continuer ?")) {
+              window.open(c.externalLink,'_blank');
+            }
+          });
+        } else {
+          playBtn.textContent = "Regarder";
+          playBtn.addEventListener('click',()=>playVideo(c.stream,c.name));
+        }
+        card.querySelector('.fav-btn').addEventListener('click',()=>{
+          toggleFavorite('channel',c.id);
+          renderLive();
+        });
+        div.appendChild(card);
+      });
+      document.getElementById('pageInfo').textContent = "Page "+livePage+" / "+totalPages;
+    }
+    document.getElementById('prevPage').onclick = function(){if(livePage>1){livePage--;renderLive();}};
+    document.getElementById('nextPage').onclick = function(){let totalPages=Math.ceil(channels.length/livePerPage);if(livePage<totalPages){livePage++;renderLive();}};
+    // --- VOD ---
+    function renderVod() {
+      let div = document.getElementById('vod-list');
+      div.innerHTML = '';
+      if(!vodList.length) {document.getElementById('vod-empty').style.display='block'; return;}
+      document.getElementById('vod-empty').style.display='none';
+      vodList.forEach(v=>{
+        let card = document.createElement('div');
+        card.className = "card";
+        card.innerHTML = `
+          <div class="title"><span class="badge">${v.categories[0]}</span> ${v.title}</div>
+          <div class="desc">${v.description}</div>
+          <div class="card-actions">
+            <button class="action-btn play-btn">Voir</button>
+            <button class="action-btn fav fav-btn${isFavorite('vod',v.id)?' active':''}">${isFavorite('vod',v.id)?'★':'☆'}</button>
+          </div>`;
+        card.querySelector('.play-btn').addEventListener('click',()=>playVideo(v.video,v.title));
+        card.querySelector('.fav-btn').addEventListener('click',()=>{
+          toggleFavorite('vod',v.id);
+          renderVod();
+        });
+        div.appendChild(card);
+      });
+    }
+    // --- Replay ---
+    function renderReplay() {
+      let div = document.getElementById('replay-list');
+      div.innerHTML = '';
+      if(!replayList.length) {document.getElementById('replay-empty').style.display='block'; return;}
+      document.getElementById('replay-empty').style.display='none';
+      replayList.forEach(r=>{
+        let card = document.createElement('div');
+        card.className = "card";
+        card.innerHTML = `
+          <div class="title"><span class="badge">${r.categories[0]}</span> ${r.title}</div>
+          <div class="desc">${r.description}</div>
+          <div class="card-actions">
+            <button class="action-btn play-btn">Regarder</button>
+            <button class="action-btn fav fav-btn${isFavorite('replay',r.id)?' active':''}">${isFavorite('replay',r.id)?'★':'☆'}</button>
+          </div>`;
+        card.querySelector('.play-btn').addEventListener('click',()=>playVideo(r.video,r.title));
+        card.querySelector('.fav-btn').addEventListener('click',()=>{
+          toggleFavorite('replay',r.id);
+          renderReplay();
+        });
+        div.appendChild(card);
+      });
+    }
+    // --- Favoris ---
+    function renderFavorites() {
+      let div = document.getElementById('favorites-list');
+      div.innerHTML = '';
+      if(!favorites.length) {document.getElementById('fav-empty').style.display='block'; return;}
+      document.getElementById('fav-empty').style.display='none';
+      favorites.forEach(fav=>{
+        let item;
+        if(fav.type==='channel') item = channels.find(c=>c.id===fav.id);
+        if(fav.type==='vod') item = vodList.find(v=>v.id===fav.id);
+        if(fav.type==='replay') item = replayList.find(r=>r.id===fav.id);
+        if(item){
+          let card = document.createElement('div');
+          card.className = "card";
+          card.innerHTML = `
+            <div class="title">${item.logo?item.logo+' ':''}${item.title||item.name} ${item.id?'<span style=\'color:#5fd068;font-size:.88em;\'>#'+item.id+'</span>':''}</div>
+            <div class="desc">${item.description||item.desc||''}</div>
+            <div class="card-actions">
+              <button class="action-btn play-btn">Regarder</button>
+              <button class="action-btn fav fav-btn active">★</button>
+            </div>`;
+          const playBtn = card.querySelector('.play-btn');
+          if(item.externalLink){
+            playBtn.textContent = "Regarder sur le site officiel";
+            playBtn.addEventListener('click',()=>{
+              if(confirm("⚠️ Vous allez allez sur un service non responsable par Alture. Souhaitez-vous continuer ?")) {
+                window.open(item.externalLink,'_blank');
+              }
+            });
+          } else {
+            playBtn.textContent = "Regarder";
+            playBtn.addEventListener('click',()=>playVideo(item.video||item.stream,item.title||item.name));
+          }
+          card.querySelector('.fav-btn').addEventListener('click',()=>{
+            toggleFavorite(fav.type,item.id);
+            renderFavorites();
+            renderLive();
+            renderVod();
+            renderReplay();
+          });
+          div.appendChild(card);
+        }
+      });
+    }
+    // --- Favoris (stockage) ---
+    function toggleFavorite(type,id){
+      const idx = favorites.findIndex(f=>f.type===type&&f.id===id);
+      if(idx===-1) favorites.push({type,id});
+      else favorites.splice(idx,1);
+      localStorage.setItem('alturetv_favorites',JSON.stringify(favorites));
+    }
+    function isFavorite(type,id){
+      return favorites.some(f=>f.type===type&&f.id===id);
+    }
+    // --- Player ---
+    function playVideo(url,title){
+      document.getElementById('video-player').src = url;
+      document.getElementById('video-title').innerText = title;
+      document.getElementById('player-modal').classList.add('active');
+    }
+    function closePlayer(){
+      document.getElementById('player-modal').classList.remove('active');
+      document.getElementById('video-player').pause();
+      document.getElementById('video-player').src = '';
+    }
+    document.getElementById('close-player').onclick = closePlayer;
+    document.getElementById('player-modal').addEventListener('click', function(e){
+      if(e.target === this) closePlayer();
+    });
+    window.addEventListener('keydown',function(e){
+      if(e.key==='Escape') closePlayer();
+    });
+    // --- Recherche ---
+    document.getElementById('search-form').onsubmit = function(e){
+      e.preventDefault();
+      const query = document.getElementById('search-query').value.trim().toLowerCase();
+      if(!query) { renderSearchResults([]); return; }
+      const results = [
+        ...channels.map(c => ({...c, type:'channel'})),
+        ...vodList.map(v => ({...v, type:'vod'})),
+        ...replayList.map(r => ({...r, type:'replay'})),
+      ].filter(item =>
+        (item.title || item.name).toLowerCase().includes(query) ||
+        (item.categories && item.categories.join(' ').toLowerCase().includes(query)) ||
+        ((item.description || item.desc || '').toLowerCase().includes(query))
+      );
+      renderSearchResults(results);
+    };
+    function renderSearchResults(results){
+      const div = document.getElementById('search-results');
+      div.innerHTML = '';
+      document.getElementById('search-empty').style.display = results && results.length ? 'none' : 'block';
+      if(!results || !results.length) return;
+      results.forEach(item=>{
+        let card = document.createElement('div');
+        card.className = "card";
+        card.innerHTML = `
+          <div class="title">${item.logo?item.logo+' ':''}${item.title||item.name} ${item.id?'<span style=\'color:#5fd068;font-size:.88em;\'>#'+item.id+'</span>':''}</div>
+          <div class="desc">${item.description||item.desc||''}</div>
+          <div class="card-actions">
+            <button class="action-btn play-btn"></button>
+            <button class="action-btn fav fav-btn${isFavorite(item.type,item.id)?' active':''}">${isFavorite(item.type,item.id)?'★':'☆'}</button>
+          </div>`;
+        const playBtn = card.querySelector('.play-btn');
+        if(item.externalLink){
+          playBtn.textContent = "Regarder sur le site officiel";
+          playBtn.addEventListener('click',()=>{
+            if(confirm("⚠️ Vous allez allez sur un service non responsable par Alture. Souhaitez-vous continuer ?")) {
+              window.open(item.externalLink,'_blank');
+            }
+          });
+        } else {
+          playBtn.textContent = "Regarder";
+          playBtn.addEventListener('click',()=>playVideo(item.stream||item.video,item.title||item.name));
+        }
+        card.querySelector('.fav-btn').addEventListener('click',()=>{
+          toggleFavorite(item.type,item.id);
+          renderSearchResults(results);
+        });
+        div.appendChild(card);
+      });
+    }
+    // --- Paramètres ---
+    document.getElementById('theme-switch').onclick = function(){
+      if(document.body.classList.contains('light')) {
+        document.body.classList.remove('light');
+        theme = 'dark';
+      } else {
+        document.body.classList.add('light');
+        theme = 'light';
+      }
+      localStorage.setItem('alturetv_theme', theme);
+      updateThemeSwitch();
+    };
+    function updateThemeSwitch() {
+      const sw = document.getElementById('theme-switch');
+      if(theme==='light') sw.classList.add('active');
+      else sw.classList.remove('active');
+    }
+    document.getElementById('resetFavBtn').onclick = function(){
+      if(confirm("Réinitialiser tous vos favoris ?")) {
+        favorites = [];
+        localStorage.setItem('alturetv_favorites',JSON.stringify(favorites));
+        renderFavorites();
+        renderLive();
+        renderVod();
+        renderReplay();
+      }
+    };
+    // --- Init ---
+    updateThemeSwitch();
+    renderLive();
+  </script>
+</body>
+</html>
