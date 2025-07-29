@@ -1,1 +1,96 @@
-<h2>Test</h2>
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AltureTV – Replay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="img/logo.png" />
+</head>
+<body class="bg-black text-white font-sans">
+
+  <!-- Navbar -->
+  <header class="bg-[#101010] shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2">
+        <img src="img/logo.png" alt="AltureTV" class="w-8 h-8" />
+        <span class="text-lg font-bold">AltureTV</span>
+      </a>
+      <nav class="hidden md:flex gap-6 text-sm font-medium">
+        <a href="index.html" class="text-blue-400">En direct</a>
+        <a href="replay.html" class="hover:text-blue-400">Replays</a>
+        <a href="vod.html" class="hover:text-blue-400">VOD</a>
+        <a href="favoris.html" class="hover:text-blue-400">Favoris</a>
+      </nav>
+      <button class="md:hidden text-white" onclick="toggleMenu()">☰</button>
+    </div>
+    <div id="mobileMenu" class="md:hidden hidden px-4 pb-4">
+      <a href="index.html" class="block py-2 text-blue-400">En direct</a>
+      <a href="replay.html" class="block py-2">Replays</a>
+      <a href="vod.html" class="block py-2">VOD</a>
+      <a href="favoris.html" class="block py-2">Favoris</a>
+    </div>
+  </header>
+
+  <!-- Section Live -->
+  <section class="py-10 px-4 max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">📺 Replay</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- Carte émission -->
+      <div class="bg-[#1a1a1a] rounded-xl overflow-hidden shadow hover:scale-[1.01] transition cursor-pointer" onclick="openPlayer('Nom de l’émission', 'video.mp4')">
+        <img src="img/logo.png" alt="TF1" class="w-full h-40 object-cover" />
+        <div class="p-4">
+          <h2 class="text-xl font-semibold">TF1</h2>
+          <p class="text-sm text-gray-400">Replay- TF1 | Platforme : TF1+ </p>
+        </div>
+      </div>
+
+      <!-- Carte émission -->
+      <div class="bg-[#1a1a1a] rounded-xl overflow-hidden shadow hover:scale-[1.01] transition cursor-pointer" onclick="openPlayer('Nom de l’émission', 'video.mp4')">
+        <img src="img/logo.png" alt="TF1" class="w-full h-40 object-cover" />
+        <div class="p-4">
+          <h2 class="text-xl font-semibold">test</h2>
+          <p class="text-sm text-gray-400">En Direct - France 2 | Inconnu - Inconnu | Inconnu </p>
+        </div>
+      </div>
+      
+      <!-- Ajouter d'autres cartes ici -->
+      <!-- ... -->
+
+    </div>
+  </section>
+
+  <!-- Player modal -->
+  <div id="playerModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden z-50">
+    <div class="max-w-3xl w-full bg-[#111] rounded-lg p-6 relative">
+      <button onclick="closePlayer()" class="absolute top-2 right-4 text-white text-2xl">×</button>
+      <h2 id="playerTitle" class="text-xl font-bold mb-4">Titre</h2>
+      <video id="playerVideo" controls class="w-full rounded">
+        <source src="" type="video/mp4" />
+        Votre navigateur ne prend pas en charge la lecture vidéo.
+      </video>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById("mobileMenu");
+      menu.classList.toggle("hidden");
+    }
+
+    function openPlayer(titre, src) {
+      document.getElementById("playerTitle").textContent = titre;
+      document.getElementById("playerVideo").src = src;
+      document.getElementById("playerModal").classList.remove("hidden");
+    }
+
+    function closePlayer() {
+      const video = document.getElementById("playerVideo");
+      video.pause();
+      video.src = "";
+      document.getElementById("playerModal").classList.add("hidden");
+    }
+  </script>
+</body>
+      </html>
